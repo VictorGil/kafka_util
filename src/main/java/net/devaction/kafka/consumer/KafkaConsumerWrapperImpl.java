@@ -36,6 +36,7 @@ public class KafkaConsumerWrapperImpl<T extends SpecificRecord> implements Kafka
     private final boolean seekFromBeginning;
     private final String topic;
     private final Processor<T> processor;
+    private final int pollingMillis;
 
     private volatile boolean stop;
     private Consumer<String, T> consumer;
@@ -45,6 +46,7 @@ public class KafkaConsumerWrapperImpl<T extends SpecificRecord> implements Kafka
         this.schemaRegistryUrl = options.getSchemaRegistryUrl();
         this.seekFromBeginning = options.isSeekFromBeginning();
         this.topic = options.getTopic();
+        this.pollingMillis = options.getPollingMillis();
         this.processor = options.getProcessor();
     }
 
@@ -85,7 +87,7 @@ public class KafkaConsumerWrapperImpl<T extends SpecificRecord> implements Kafka
         log.trace("Going to poll for messages.");
 
         ConsumerRecords<String, T> records =
-                consumer.poll(Duration.ofMillis(100));
+                consumer.poll(Duration.ofMillis(pollingMillis));
 
         if (!records.isEmpty()) {
             log.debug("Number of \"Client\" records polled: {}", records.count());
@@ -106,7 +108,7 @@ public class KafkaConsumerWrapperImpl<T extends SpecificRecord> implements Kafka
     private void seekFromBeginning() {
         while (consumer.assignment().isEmpty()) {
             log.trace("Going to perform a dummy poll");
-            consumer.poll(Duration.ofMillis(100));
+            consumer.poll(Duration.ofMillis(pollingMillis));
         }
 
         consumer.seekToBeginning(consumer.assignment());
@@ -116,5 +118,12 @@ public class KafkaConsumerWrapperImpl<T extends SpecificRecord> implements Kafka
     public void stop() {
         log.info("We have been told to stop.");
         stop = true;
+    }
+
+    @Override
+    public String toString() {
+        return "KafkaConsumerWrapperImpl [bootstrapServers=" + bootstrapServers + ", schemaRegistryUrl=" + schemaRegistryUrl
+                + ", seekFromBeginning=" + seekFromBeginning + ", topic=" + topic + ", processor=" + processor
+                + ", pollingMillis=" + pollingMillis + ", stop=" + stop + ", consumer=" + consumer + "]";
     }
 }

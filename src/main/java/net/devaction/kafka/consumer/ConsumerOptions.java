@@ -9,11 +9,16 @@ import org.apache.avro.specific.SpecificRecord;
  */
 public final class ConsumerOptions<T extends SpecificRecord> {
 
+    public Builder newBuilder() {
+        return new Builder();
+    }
+
     public final class Builder {
         private String bootstrapServers;
         private String schemaRegistryUrl;
         private boolean seekFromBeginning;
         private String topic;
+        private int pollingMillis;
         private Processor<T> processor;
 
         public Builder setBootstrapServers(String bootstrapServers) {
@@ -36,27 +41,39 @@ public final class ConsumerOptions<T extends SpecificRecord> {
             return this;
         }
 
+        public Builder setPollingMillis(int pollingMillis) {
+            this.pollingMillis = pollingMillis;
+            return this;
+        }
+
         public Builder setProcessor(Processor<T> processor) {
             this.processor = processor;
             return this;
         }
 
         public ConsumerOptions<T> build() {
-            return new ConsumerOptions<T>(bootstrapServers, schemaRegistryUrl, seekFromBeginning, topic, processor);
+            return new ConsumerOptions<T>(bootstrapServers, schemaRegistryUrl, seekFromBeginning,
+                    topic, pollingMillis, processor);
         }
     }
 
-    private final String bootstrapServers;
-    private final String schemaRegistryUrl;
-    private final boolean seekFromBeginning;
-    private final String topic;
-    private final Processor<T> processor;
+    private String bootstrapServers;
+    private String schemaRegistryUrl;
+    private boolean seekFromBeginning;
+    private String topic;
+    private int pollingMillis;
+    private Processor<T> processor;
 
-    private ConsumerOptions(String bootstrapServers, String schemaRegistryUrl, boolean seekFromBeginning, String topic, Processor<T> processor) {
+    // We need this because it is a generic class
+    public ConsumerOptions() { }
+
+    private ConsumerOptions(String bootstrapServers, String schemaRegistryUrl, boolean seekFromBeginning, String topic,
+            int pollingMillis, Processor<T> processor) {
         this.bootstrapServers = bootstrapServers;
         this.schemaRegistryUrl = schemaRegistryUrl;
         this.seekFromBeginning = seekFromBeginning;
         this.topic = topic;
+        this.pollingMillis = pollingMillis;
         this.processor = processor;
     }
 
@@ -64,7 +81,7 @@ public final class ConsumerOptions<T extends SpecificRecord> {
     public String toString() {
         return "ConsumerOptions [bootstrapServers=" + bootstrapServers + ", schemaRegistryUrl=" + schemaRegistryUrl
                 + ", seekFromBeginning=" + seekFromBeginning + ", topic="
-                + topic + ", processor=" + processor + "]";
+                + topic + ", pollingMillis=" + pollingMillis + ", processor=" + processor + "]";
     }
 
     public String getBootstrapServers() {
@@ -81,6 +98,10 @@ public final class ConsumerOptions<T extends SpecificRecord> {
 
     public String getTopic() {
         return topic;
+    }
+
+    public int getPollingMillis() {
+        return pollingMillis;
     }
 
     public Processor<T> getProcessor() {
