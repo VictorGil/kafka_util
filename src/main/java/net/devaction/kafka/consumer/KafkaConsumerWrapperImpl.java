@@ -68,32 +68,32 @@ public class KafkaConsumerWrapperImpl<T extends SpecificRecord> implements Kafka
         consumer.subscribe(Collections.singletonList(topic));
 
         List<PartitionInfo> partitionsInfo = consumer.partitionsFor(topic);
-        log.info("Partitions for \" {}\" topic: {}", topic, partitionsInfo);
+        log.info("Partitions for \"{}\" topic: {}", topic, partitionsInfo);
 
         seekFromBeginningIfRequired();
 
         stop = false;
 
-        log.info("\" {}\" topic consumer started", topic);
+        log.info("\"{}\" topic consumer started", topic);
         while (!stop) {
             poll();
         }
 
-        log.info("Going to close the \" {}\" topic Kafka consumer.", topic);
+        log.info("Going to close the \"{}\" topic Kafka consumer.", topic);
         consumer.close();
     }
 
     void poll() {
         log.trace("Going to poll for messages.");
 
-        ConsumerRecords<String, T> records =
+        ConsumerRecords<String,T> records =
                 consumer.poll(Duration.ofMillis(pollingMillis));
 
         if (!records.isEmpty()) {
-            log.debug("Number of \"Client\" records polled: {}", records.count());
+            log.debug("Number of records polled: {}", records.count());
         }
 
-        for (ConsumerRecord<String, T> record: records) {
+        for (ConsumerRecord<String,T> record: records) {
             processor.process(record.value());
         }
         // We do not need to manually commit // consumer.commitSync();
